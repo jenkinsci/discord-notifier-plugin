@@ -11,9 +11,11 @@ import hudson.tasks.BuildStepMonitor;
 import hudson.tasks.Notifier;
 import hudson.tasks.Publisher;
 import hudson.util.FormValidation;
+import java.util.Objects;
 import jenkins.model.JenkinsLocationConfiguration;
 import nz.co.jammehcow.jenkinsdiscord.exception.WebhookException;
 import nz.co.jammehcow.jenkinsdiscord.util.EmbedDescription;
+import org.apache.commons.lang.StringUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 
@@ -28,8 +30,8 @@ public class WebhookPublisher extends Notifier {
     private boolean enableUrlLinking;
     private final boolean enableArtifactList;
     private final boolean enableFooterInfo;
-    private static final String NAME = "Discord Notifier";
-    private static final String VERSION = "1.1.0";
+    public static final String NAME = "Discord Notifier";
+    public static final String VERSION = "1.1.0";
 
     @DataBoundConstructor
     public WebhookPublisher(String webhookURL, boolean sendOnStateChange, boolean enableUrlLinking, boolean enableArtifactList, boolean enableFooterInfo) {
@@ -63,20 +65,23 @@ public class WebhookPublisher extends Notifier {
             return true;
         }
 
-        if (this.enableUrlLinking && (globalConfig.getUrl() == null || globalConfig.getUrl().isEmpty())) {
+        if (this.enableUrlLinking && StringUtils.isEmpty(globalConfig.getUrl())) {
             // Disable linking when the instance URL isn't set
             listener.getLogger().println("Your Jenkins URL is not set (or is set to localhost)! Disabling linking.");
             this.enableUrlLinking = false;
         }
 
         if (this.sendOnStateChange) {
-            if (build.getResult().equals(build.getPreviousBuild().getResult())) {
+            AbstractBuild prevBuild = build.getPreviousBuild();
+            Result prevResult = prevBuild != null ? prevBuild.getResult() : null;
+            if (Objects.equals(build.getResult(), prevResult)) {
                 // Stops the webhook payload being created if the status is the same as the previous
                 return true;
             }
         }
 
-        boolean buildStatus = build.getResult().isBetterOrEqualTo(Result.SUCCESS);
+        Result result = build.getResult();
+        String resultStr = result != null ? result.toString().toLowerCase() : "null";
         wh.setTitle(build.getProject().getDisplayName() + " #" + build.getId());
 
         String descriptionPrefix;
@@ -87,19 +92,19 @@ public class WebhookPublisher extends Notifier {
             descriptionPrefix = "**Build:** "
                 + getMarkdownHyperlink(build.getId(), url)
                 + "\n**Status:** "
-                + getMarkdownHyperlink(build.getResult().toString().toLowerCase(), url);
+                + getMarkdownHyperlink(resultStr, url);
             wh.setURL(url);
         } else {
             descriptionPrefix = "**Build:** "
                     + build.getId()
                     + "\n**Status:** "
-                    + build.getResult().toString().toLowerCase();
+                    + resultStr;
         }
 
         wh.setDescription(new EmbedDescription(build, globalConfig, descriptionPrefix, this.enableArtifactList).toString());
-        wh.setStatus(buildStatus);
+        wh.setStatus(result != null && result.isBetterOrEqualTo(Result.SUCCESS));
 
-        if (this.enableFooterInfo) wh.setFooter("Jenkins v" + build.getHudsonVersion() + ", " + getDescriptor().getDisplayName() + " v" + getDescriptor().getVersion());
+        if (this.enableFooterInfo) wh.setFooter("Jenkins ver. " + build.getHudsonVersion() + ", " + getDescriptor().getDisplayName() + " ver. " + getDescriptor().getVersion());
 
         try { wh.send(); }
         catch (WebhookException e) { e.printStackTrace(); }

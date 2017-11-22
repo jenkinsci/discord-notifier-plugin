@@ -3,10 +3,12 @@ package nz.co.jammehcow.jenkinsdiscord.util;
 import hudson.model.AbstractBuild;
 import hudson.model.Run;
 import hudson.scm.ChangeLogSet;
-import jenkins.model.JenkinsLocationConfiguration;
-
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import jenkins.model.JenkinsLocationConfiguration;
+import org.jenkinsci.plugins.workflow.job.WorkflowRun;
 
 /**
  * @author jammehcow
@@ -20,21 +22,40 @@ public class EmbedDescription {
     private String prefix;
     private String finalDescription;
 
-    public EmbedDescription(AbstractBuild build, JenkinsLocationConfiguration globalConfig, String prefix, boolean enableArtifactsList) {
+    public EmbedDescription(Run build, JenkinsLocationConfiguration globalConfig, String prefix, boolean enableArtifactsList) {
         String artifactsURL = globalConfig.getUrl() + build.getUrl() + "artifact/";
         this.prefix = prefix;
         this.changesList.add("\n**Changes:**\n");
         if (enableArtifactsList) this.artifactsList.add("\n**Artifacts:**\n");
-        Object[] changes = build.getChangeSet().getItems();
-
-        if (changes.length == 0) {
-            this.changesList.add("\n*No changes.*\n");
+        
+        ArrayList<Object> changes = new ArrayList<>();
+        if (build instanceof AbstractBuild) {
+            AbstractBuild abstractBuild = (AbstractBuild)build;
+            changes.addAll(Arrays.asList(abstractBuild.getChangeSet().getItems()));
+        } else if (build instanceof WorkflowRun) {
+            WorkflowRun workflowRun = (WorkflowRun)build;
+            for (ChangeLogSet i : workflowRun.getChangeSets())
+                changes.addAll(Arrays.asList(i.getItems()));
+        } else {
+            throw new IllegalArgumentException(
+                "build is neither an AbstractBuild nor a WorkflowRun");
+        }
+        
+        if (changes.isEmpty()) {
+            this.changesList.add("*No changes.*");
         } else {
             for (Object o : changes) {
                 ChangeLogSet.Entry entry = (ChangeLogSet.Entry) o;
                 String commitID = (entry.getParent().getKind().equalsIgnoreCase("svn")) ? entry.getCommitId() : entry.getCommitId().substring(0, 6);
 
-                this.changesList.add("   - ``" + commitID + "`` *" + entry.getMsg() + " - " + entry.getAuthor().getFullName() + "*\n");
+                String msg = entry.getMsg().trim();
+                int nl = msg.indexOf("\n");
+                if (nl >= 0) {
+                    msg = msg.substring(0, nl);
+                }
+
+                this.changesList.add("   - ``" + commitID + "`` *" + msg
+                    + " - " + entry.getAuthor().getFullName() + "*\n");
             }
         }
 
