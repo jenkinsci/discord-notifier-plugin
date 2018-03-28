@@ -15,7 +15,8 @@ import org.jenkinsci.plugins.workflow.job.WorkflowRun;
  */
 
 public class EmbedDescription {
-    private static final int maxEmbedStringLength = 2048; // The maximum length of an embed description.
+    // https://discordapp.com/developers/docs/resources/webhook#execute-webhook-jsonform-params
+    private static final int maxEmbedStringLength = 2000;
 
     private LinkedList<String> changesList = new LinkedList<>();
     private LinkedList<String> artifactsList = new LinkedList<>();
@@ -51,10 +52,10 @@ public class EmbedDescription {
                 String msg = entry.getMsg().trim();
                 int nl = msg.indexOf("\n");
                 if (nl >= 0) {
-                    msg = msg.substring(0, nl);
+                    msg = msg.substring(0, nl).trim();
                 }
 
-                this.changesList.add("   - ``" + commitID + "`` *" + msg
+                this.changesList.add("   - ``" + commitID + "`` *" + EscapeMarkdown(msg)
                     + " - " + entry.getAuthor().getFullName() + "*\n");
             }
         }
@@ -102,5 +103,12 @@ public class EmbedDescription {
     @Override
     public String toString() {
         return this.finalDescription;
+    }
+    
+    private static String EscapeMarkdown(String text) {
+        text = text.replace("*", "\\*");
+        text = text.replace("_", "\\_");
+        text = text.replace("~", "\\~");
+        return text;
     }
 }
