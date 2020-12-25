@@ -2,6 +2,7 @@ package nz.co.jammehcow.jenkinsdiscord;
 
 import hudson.Extension;
 import hudson.model.Result;
+import hudson.model.Run;
 import hudson.model.TaskListener;
 import nz.co.jammehcow.jenkinsdiscord.exception.WebhookException;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
@@ -13,8 +14,10 @@ import org.kohsuke.stapler.DataBoundSetter;
 
 import javax.annotation.Nonnull;
 import javax.inject.Inject;
+import jenkins.model.JenkinsLocationConfiguration;
 
 import static nz.co.jammehcow.jenkinsdiscord.DiscordWebhook.*;
+import nz.co.jammehcow.jenkinsdiscord.util.EmbedDescription;
 
 public class DiscordPipelineStep extends AbstractStepImpl {
     private final String webhookURL;
@@ -29,6 +32,8 @@ public class DiscordPipelineStep extends AbstractStepImpl {
     private String notes;
     private boolean successful;
     private boolean unstable;
+    private boolean enableArtifactsList;
+    private boolean showChangeset;
 
     @DataBoundConstructor
     public DiscordPipelineStep(String webhookURL) {
@@ -129,6 +134,24 @@ public class DiscordPipelineStep extends AbstractStepImpl {
         return notes;
     }
 
+    @DataBoundSetter
+    public void setEnableArtifactList(boolean enable) {
+        this.enableArtifactsList = enable;
+    }
+
+    public boolean getEnableArtifactList() {
+        return enableArtifactsList;
+    }
+
+    @DataBoundSetter
+    public void setShowChangeset(boolean show) {
+        this.showChangeset = show;
+    }
+
+    public boolean getShowChangeset() {
+        return showChangeset;
+    }
+
     public static class DiscordPipelineStepExecution extends AbstractSynchronousNonBlockingStepExecution<Void> {
         @Inject
         transient DiscordPipelineStep step;
@@ -162,7 +185,18 @@ public class DiscordPipelineStep extends AbstractStepImpl {
             wh.setTitle(checkLimitAndTruncate("title", step.getTitle(), TITLE_LIMIT));
             wh.setURL(step.getLink());
             wh.setThumbnail(step.getThumbnail());
-            wh.setDescription(checkLimitAndTruncate("description", step.getDescription(), DESCRIPTION_LIMIT));
+
+            if (step.getEnableArtifactList() || step.getShowChangeset()) {
+                JenkinsLocationConfiguration globalConfig = JenkinsLocationConfiguration.get();
+                Run build = getContext().get(Run.class);
+                wh.setDescription(
+                    new EmbedDescription(build, globalConfig, step.getDescription(), step.getEnableArtifactList(), step.getShowChangeset())
+                            .toString()
+                );
+            } else {
+                wh.setDescription(checkLimitAndTruncate("description", step.getDescription(), DESCRIPTION_LIMIT));
+            }
+
             wh.setImage(step.getImage());
             wh.setFooter(checkLimitAndTruncate("footer", step.getFooter(), FOOTER_LIMIT));
             wh.setStatus(statusColor);
