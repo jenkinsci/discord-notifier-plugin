@@ -32,7 +32,7 @@ public class DiscordPipelineStep extends AbstractStepImpl {
     private String notes;
     private boolean successful;
     private boolean unstable;
-    private boolean enableArtifactsList;
+    private boolean enableArtifactList;
     private boolean showChangeset;
 
     @DataBoundConstructor
@@ -136,11 +136,11 @@ public class DiscordPipelineStep extends AbstractStepImpl {
 
     @DataBoundSetter
     public void setEnableArtifactList(boolean enable) {
-        this.enableArtifactsList = enable;
+        this.enableArtifactList = enable;
     }
 
     public boolean getEnableArtifactList() {
-        return enableArtifactsList;
+        return enableArtifactList;
     }
 
     @DataBoundSetter
