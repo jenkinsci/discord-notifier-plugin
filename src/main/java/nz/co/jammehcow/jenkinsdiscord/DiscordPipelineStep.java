@@ -32,7 +32,7 @@ public class DiscordPipelineStep extends AbstractStepImpl {
     private String notes;
     private boolean successful;
     private boolean unstable;
-    private boolean enableArtifactList;
+    private boolean enableArtifactsList;
     private boolean showChangeset;
 
     @DataBoundConstructor
@@ -135,12 +135,12 @@ public class DiscordPipelineStep extends AbstractStepImpl {
     }
 
     @DataBoundSetter
-    public void setEnableArtifactList(boolean enable) {
-        this.enableArtifactList = enable;
+    public void setEnableArtifactsList(boolean enable) {
+        this.enableArtifactsList = enable;
     }
 
-    public boolean getEnableArtifactList() {
-        return enableArtifactList;
+    public boolean getEnableArtifactsList() {
+        return enableArtifactsList;
     }
 
     @DataBoundSetter
@@ -186,11 +186,10 @@ public class DiscordPipelineStep extends AbstractStepImpl {
             wh.setURL(step.getLink());
             wh.setThumbnail(step.getThumbnail());
 
-            if (step.getEnableArtifactList() || step.getShowChangeset()) {
+            if (step.getEnableArtifactsList() || step.getShowChangeset()) {
                 JenkinsLocationConfiguration globalConfig = JenkinsLocationConfiguration.get();
                 Run build = getContext().get(Run.class);
-                wh.setDescription(
-                    new EmbedDescription(build, globalConfig, step.getDescription(), step.getEnableArtifactList(), step.getShowChangeset())
+                wh.setDescription(new EmbedDescription(build, globalConfig, step.getDescription(), step.getEnableArtifactsList(), step.getShowChangeset())
                             .toString()
                 );
             } else {
