@@ -9,6 +9,7 @@ import jenkins.model.JenkinsLocationConfiguration;
 
 import java.util.LinkedList;
 import java.util.List;
+import org.apache.commons.lang.StringUtils;
 
 /**
  * @author jammehcow
@@ -30,13 +31,13 @@ public class EmbedDescription {
             boolean showChangeset
     ) {
         String artifactsURL = globalConfig.getUrl() + build.getUrl() + "artifact/";
-        this.prefix = prefix;
+        this.prefix = prefix.trim();
 
         if (showChangeset) {
             ArrayList<Object> changes = new ArrayList<>();
             List<ChangeLogSet> changeSets = ((RunWithSCM)build).getChangeSets();
             for (ChangeLogSet i : changeSets)
-                changes.add(Arrays.asList(i.getItems()));
+                changes.addAll(Arrays.asList(i.getItems()));
             if (changes.isEmpty()) {
                 this.changesList.add("\n*No changes.*\n");
             } else {
@@ -91,13 +92,14 @@ public class EmbedDescription {
 
     private String getCurrentDescription() {
         StringBuilder description = new StringBuilder();
-        description.append(this.prefix);
+        if (StringUtils.isNotEmpty(this.prefix))
+            description.append(this.prefix);
 
         // Collate the changes and artifacts into the description.
         for (String changeEntry : this.changesList) description.append(changeEntry);
         for (String artifact : this.artifactsList) description.append(artifact);
 
-        return description.toString();
+        return description.toString().trim();
     }
 
     @Override
