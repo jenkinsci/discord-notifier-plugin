@@ -34,6 +34,7 @@ public class DiscordPipelineStep extends AbstractStepImpl {
     private boolean unstable;
     private boolean enableArtifactsList;
     private boolean showChangeset;
+    private String scmWebUrl;
 
     @DataBoundConstructor
     public DiscordPipelineStep(String webhookURL) {
@@ -152,6 +153,15 @@ public class DiscordPipelineStep extends AbstractStepImpl {
         return showChangeset;
     }
 
+    @DataBoundSetter
+    public void setScmWebUrl(String url) {
+        this.scmWebUrl = url;
+    }
+
+    public String getScmWebUrl() {
+        return scmWebUrl;
+    }
+
     public static class DiscordPipelineStepExecution extends AbstractSynchronousNonBlockingStepExecution<Void> {
         @Inject
         transient DiscordPipelineStep step;
@@ -189,8 +199,8 @@ public class DiscordPipelineStep extends AbstractStepImpl {
             if (step.getEnableArtifactsList() || step.getShowChangeset()) {
                 JenkinsLocationConfiguration globalConfig = JenkinsLocationConfiguration.get();
                 Run build = getContext().get(Run.class);
-                wh.setDescription(new EmbedDescription(build, globalConfig, step.getDescription(), step.getEnableArtifactsList(), step.getShowChangeset())
-                            .toString()
+                wh.setDescription(new EmbedDescription(build, globalConfig, step.getDescription(), step.getEnableArtifactsList(), step.getShowChangeset(), step.getScmWebUrl())
+                        .toString()
                 );
             } else {
                 wh.setDescription(checkLimitAndTruncate("description", step.getDescription(), DESCRIPTION_LIMIT));
