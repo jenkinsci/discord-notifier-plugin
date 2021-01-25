@@ -43,6 +43,7 @@ public class WebhookPublisher extends Notifier {
     private boolean sendStartNotification;
     private static final String NAME = "Discord Notifier";
     private static final String VERSION = "1.4.11";
+    private final String scmWebUrl;
 
     @DataBoundConstructor
     public WebhookPublisher(
@@ -57,7 +58,8 @@ public class WebhookPublisher extends Notifier {
             boolean enableFooterInfo,
             boolean showChangeset,
             boolean sendLogFile,
-            boolean sendStartNotification
+            boolean sendStartNotification,
+            String scmWebUrl
     ) {
         this.webhookURL = webhookURL;
         this.thumbnailURL = thumbnailURL;
@@ -71,6 +73,7 @@ public class WebhookPublisher extends Notifier {
         this.notes = notes;
         this.sendLogFile = sendLogFile;
         this.sendStartNotification = sendStartNotification;
+        this.scmWebUrl = scmWebUrl;
     }
 
     public String getWebhookURL() {
@@ -121,6 +124,10 @@ public class WebhookPublisher extends Notifier {
         return this.sendStartNotification;
     }
 
+    public String getScmWebUrl() {
+        return this.scmWebUrl;
+    }
+
     @Override
     public boolean needsToRunAfterFinalized() {
         return true;
@@ -158,7 +165,7 @@ public class WebhookPublisher extends Notifier {
                             + "**Build:** "
                             + build.getId();
                 }
-                wh.setDescription(new EmbedDescription(build, globalConfig, description, false, false).toString());
+                wh.setDescription(new EmbedDescription(build, globalConfig, description, false, false, null).toString());
                 wh.send();
             } catch (WebhookException | InterruptedException | IOException e1) {
                 e1.printStackTrace(listener.getLogger());
@@ -258,7 +265,7 @@ public class WebhookPublisher extends Notifier {
 
         wh.setThumbnail(thumbnailURL);
         wh.setDescription(
-                new EmbedDescription(build, globalConfig, descriptionPrefix, this.enableArtifactList, this.showChangeset)
+                new EmbedDescription(build, globalConfig, descriptionPrefix, this.enableArtifactList, this.showChangeset, this.scmWebUrl)
                         .toString()
         );
         wh.setStatus(statusColor);
