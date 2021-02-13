@@ -37,7 +37,11 @@ public class EmbedDescription {
             ArrayList<Object> changes = new ArrayList<>();
             List<ChangeLogSet> changeSets = ((RunWithSCM)build).getChangeSets();
             for (ChangeLogSet i : changeSets)
+<<<<<<< HEAD
+                changes.add(Arrays.asList(i.getItems()));
+=======
                 changes.addAll(Arrays.asList(i.getItems()));
+>>>>>>> b4c37f2a6ec28b19d7c528d3628a4ef6b5f67173
             if (changes.isEmpty()) {
                 this.changesList.add("\n*No changes.*\n");
             } else {

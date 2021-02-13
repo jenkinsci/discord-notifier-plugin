@@ -77,6 +77,16 @@ class DiscordWebhook {
         return this;
     }
 
+    public DiscordWebhook setCustomUsername(String username) {
+        this.obj.put("username", username);
+        return this;
+    }
+
+    public DiscordWebhook setCustomAvatarUrl(String url) {
+        this.obj.put("avatar_url", url);
+        return this;
+    }
+
     /**
      * Sets the embed title url.
      *

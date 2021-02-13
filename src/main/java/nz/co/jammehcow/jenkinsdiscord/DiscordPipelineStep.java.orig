@@ -135,15 +135,31 @@ public class DiscordPipelineStep extends AbstractStepImpl {
     }
 
     @DataBoundSetter
+<<<<<<< HEAD
+    public void setEnableArtifactList(boolean enable) {
+        this.enableArtifactsList = enable;
+    }
+
+    public boolean getEnableArtifactList() {
+=======
     public void setEnableArtifactsList(boolean enable) {
         this.enableArtifactsList = enable;
     }
 
     public boolean getEnableArtifactsList() {
+>>>>>>> b4c37f2a6ec28b19d7c528d3628a4ef6b5f67173
         return enableArtifactsList;
     }
 
     @DataBoundSetter
+    public void setShowChangeset(boolean show) {
+        this.showChangeset = show;
+    }
+
+    public boolean getShowChangeset() {
+        return showChangeset;
+    }
+
     public static class DiscordPipelineStepExecution extends AbstractSynchronousNonBlockingStepExecution<Void> {
         @Inject
         transient DiscordPipelineStep step;
@@ -178,10 +194,18 @@ public class DiscordPipelineStep extends AbstractStepImpl {
             wh.setURL(step.getLink());
             wh.setThumbnail(step.getThumbnail());
 
+<<<<<<< HEAD
+            if (step.getEnableArtifactList() || step.getShowChangeset()) {
+                JenkinsLocationConfiguration globalConfig = JenkinsLocationConfiguration.get();
+                Run build = getContext().get(Run.class);
+                wh.setDescription(
+                    new EmbedDescription(build, globalConfig, step.getDescription(), step.getEnableArtifactList(), step.getShowChangeset())
+=======
             if (step.getEnableArtifactsList() || step.getShowChangeset()) {
                 JenkinsLocationConfiguration globalConfig = JenkinsLocationConfiguration.get();
                 Run build = getContext().get(Run.class);
                 wh.setDescription(new EmbedDescription(build, globalConfig, step.getDescription(), step.getEnableArtifactsList(), step.getShowChangeset())
+>>>>>>> b4c37f2a6ec28b19d7c528d3628a4ef6b5f67173
                             .toString()
                 );
             } else {

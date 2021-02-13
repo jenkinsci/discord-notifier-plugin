@@ -34,6 +34,8 @@ public class WebhookPublisher extends Notifier {
     private final String statusTitle;
     private final String thumbnailURL;
     private final String notes;
+    private final String customAvatarUrl;
+    private final String customUsername;
     private final boolean sendOnStateChange;
     private boolean enableUrlLinking;
     private final boolean enableArtifactList;
@@ -42,7 +44,7 @@ public class WebhookPublisher extends Notifier {
     private boolean sendLogFile;
     private boolean sendStartNotification;
     private static final String NAME = "Discord Notifier";
-    private static final String VERSION = "1.4.11";
+    private static final String VERSION = "1.4.14";
 
     @DataBoundConstructor
     public WebhookPublisher(
@@ -52,6 +54,8 @@ public class WebhookPublisher extends Notifier {
             String statusTitle,
             String notes,
             String branchName,
+            String customAvatarUrl,
+            String customUsername,
             boolean enableUrlLinking,
             boolean enableArtifactList,
             boolean enableFooterInfo,
@@ -69,6 +73,8 @@ public class WebhookPublisher extends Notifier {
         this.branchName = branchName;
         this.statusTitle = statusTitle;
         this.notes = notes;
+        this.customAvatarUrl = customAvatarUrl;
+        this.customUsername = customUsername;
         this.sendLogFile = sendLogFile;
         this.sendStartNotification = sendStartNotification;
     }
@@ -83,6 +89,14 @@ public class WebhookPublisher extends Notifier {
 
     public String getStatusTitle() {
         return this.statusTitle;
+    }
+
+    public String getCustomAvatarUrl() {
+        return this.customAvatarUrl;
+    }
+
+    public String getCustomUsername() {
+        return this.customUsername;
     }
 
     public String getNotes() {
@@ -256,6 +270,14 @@ public class WebhookPublisher extends Notifier {
             wh.setContent(env.expand(notes));
         }
 
+        if (customAvatarUrl != null && !customAvatarUrl.isEmpty()) {
+            wh.setCustomAvatarUrl(customAvatarUrl);
+        }
+
+        if (customUsername != null && !customUsername.isEmpty()) {
+            wh.setCustomUsername(customUsername);
+        }
+
         wh.setThumbnail(thumbnailURL);
         wh.setDescription(
                 new EmbedDescription(build, globalConfig, descriptionPrefix, this.enableArtifactList, this.showChangeset)
@@ -292,7 +314,7 @@ public class WebhookPublisher extends Notifier {
         }
 
         public FormValidation doCheckWebhookURL(@QueryParameter String value) {
-            if (!value.matches("https://(canary\\.|ptb\\.|)discordapp\\.com/api/webhooks/\\d{18}/(\\w|-|_)*(/?)"))
+            if (!value.matches("https://(canary\\.|ptb\\.|)discord(app)*\\.com/api/webhooks/\\d{18}/(\\w|-|_)*(/?)"))
                 return FormValidation.error("Please enter a valid Discord webhook URL.");
             return FormValidation.ok();
         }
