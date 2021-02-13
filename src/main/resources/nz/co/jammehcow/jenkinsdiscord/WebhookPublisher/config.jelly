@@ -19,6 +19,12 @@
     <f:entry title="Notes" field="notes">
         <f:textbox />
     </f:entry>
+    <f:entry title="Custom avatar url" field="customAvatarUrl">
+      <f:textbox />
+    </f:entry>
+    <f:entry title="Custom name" field="customUsername">
+      <f:textbox />
+    </f:entry>
     <f:entry title="Enable URL linking" field="enableUrlLinking">
       <f:checkbox />
     </f:entry>
