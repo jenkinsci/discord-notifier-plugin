@@ -5,6 +5,7 @@ import hudson.model.Run;
 import hudson.scm.ChangeLogSet;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.IllegalFormatException;
 import jenkins.model.JenkinsLocationConfiguration;
 
 import java.util.LinkedList;
@@ -28,10 +29,11 @@ public class EmbedDescription {
             JenkinsLocationConfiguration globalConfig,
             String prefix,
             boolean enableArtifactsList,
-            boolean showChangeset
+            boolean showChangeset,
+            String scmWebUrl
     ) {
         String artifactsURL = globalConfig.getUrl() + build.getUrl() + "artifact/";
-        this.prefix = prefix.trim();
+        this.prefix = StringUtils.trimToNull(prefix);
 
         if (showChangeset) {
             ArrayList<Object> changes = new ArrayList<>();
@@ -42,20 +44,40 @@ public class EmbedDescription {
                 this.changesList.add("\n*No changes.*\n");
             } else {
                 this.changesList.add("\n**Changes:**\n");
+
+                boolean withLinks;
+                try {
+                    String dummy = String.format(scmWebUrl, "");
+                    withLinks = true;
+                } catch (IllegalFormatException ex) {
+                    withLinks = false;
+                }
+
                 for (Object o : changes) {
                     ChangeLogSet.Entry entry = (ChangeLogSet.Entry) o;
-                    String commitID;
-                    if (entry.getCommitId() == null) commitID = "null";
-                    else if (entry.getCommitId().length() < 6) commitID = entry.getCommitId();
-                    else commitID = entry.getCommitId().substring(0, 6);
+
+                    String commitID = entry.getCommitId();
+                    String commitDisplayStr;
+                    if (commitID == null) commitDisplayStr = "null  ";
+                    else if (commitID.length() < 6) commitDisplayStr = commitID;
+                    else commitDisplayStr = commitID.substring(0, 6);
 
                     String msg = entry.getMsg().trim();
                     int nl = msg.indexOf("\n");
                     if (nl >= 0)
                         msg = msg.substring(0, nl).trim();
+                    msg = EscapeMarkdown(msg);
 
-                    this.changesList.add(String.format("   - ``%s`` *%s - %s*%n",
-                            commitID, EscapeMarkdown(msg), entry.getAuthor().getFullName()));
+                    String author = entry.getAuthor().getFullName();
+
+                    if (withLinks) {
+                        String url = String.format(scmWebUrl, commitID);
+                        this.changesList.add(String.format("   - [`%s`](%s) *%s - %s*%n",
+                                commitDisplayStr, url, msg, author));
+                    } else {
+                        this.changesList.add(String.format("   - `%s` *%s - %s*%n",
+                                commitDisplayStr, msg, author));
+                    }
                 }
             }
         }
@@ -92,7 +114,7 @@ public class EmbedDescription {
 
     private String getCurrentDescription() {
         StringBuilder description = new StringBuilder();
-        if (StringUtils.isNotEmpty(this.prefix))
+        if (this.prefix != null)
             description.append(this.prefix);
 
         // Collate the changes and artifacts into the description.
