@@ -78,12 +78,24 @@ class DiscordWebhook {
     }
 
     public DiscordWebhook setCustomUsername(String username) {
-        this.obj.put("username", username);
+        if (username != null && !username.equals(""))
+            this.obj.put("username", username);
+        else
+        {
+            // unset will allow default discord username to be used (as specified in discord's integration settings)
+            this.obj.remove("username"); 
+        }
         return this;
     }
 
     public DiscordWebhook setCustomAvatarUrl(String url) {
-        this.obj.put("avatar_url", url);
+        if (url != null && !url.equals(""))
+            this.obj.put("avatar_url", url);
+        else
+        {
+            // unset will allow default avatar to be used (as specified in discord's integration settings)
+            this.obj.remove("avatar_url"); 
+        }
         return this;
     }
 

@@ -30,6 +30,8 @@ public class DiscordPipelineStep extends AbstractStepImpl {
     private String thumbnail;
     private String result;
     private String notes;
+    private String customAvatarUrl;
+    private String customUsername;
     private boolean successful;
     private boolean unstable;
     private boolean enableArtifactsList;
@@ -133,6 +135,24 @@ public class DiscordPipelineStep extends AbstractStepImpl {
     public String getNotes() {
         return notes;
     }
+    
+    @DataBoundSetter
+    public void setCustomAvatarUrl(String customAvatarUrl) {
+        this.customAvatarUrl = customAvatarUrl;
+    }
+
+    public String getCustomAvatarUrl() {
+        return customAvatarUrl;
+    }
+    
+    @DataBoundSetter
+    public void setCustomUsername(String customUsername) {
+        this.customUsername = customUsername;
+    }
+
+    public String getCustomUsername() {
+        return customUsername;
+    }
 
     @DataBoundSetter
     public void setEnableArtifactsList(boolean enable) {
@@ -200,6 +220,12 @@ public class DiscordPipelineStep extends AbstractStepImpl {
             wh.setFooter(checkLimitAndTruncate("footer", step.getFooter(), FOOTER_LIMIT));
             wh.setStatus(statusColor);
             wh.setContent(step.getNotes());
+            
+            if (step.getCustomAvatarUrl() != null)
+                wh.setCustomAvatarUrl(step.getCustomAvatarUrl());
+                
+            if (step.getCustomUsername() != null)
+                wh.setCustomUsername(step.getCustomUsername());
 
             try { wh.send(); }
             catch (WebhookException e) { e.printStackTrace(listener.getLogger()); }
