@@ -222,10 +222,10 @@ public class DiscordPipelineStep extends AbstractStepImpl {
             wh.setContent(step.getNotes());
             
             if (step.getCustomAvatarUrl() != null)
-				wh.setCustomAvatarUrl(step.getCustomAvatarUrl());
-				
-			if (step.getCustomUsername() != null)
-				wh.setCustomUsername(step.getCustomUsername());
+                wh.setCustomAvatarUrl(step.getCustomAvatarUrl());
+                
+            if (step.getCustomUsername() != null)
+                wh.setCustomUsername(step.getCustomUsername());
 
             try { wh.send(); }
             catch (WebhookException e) { e.printStackTrace(listener.getLogger()); }
