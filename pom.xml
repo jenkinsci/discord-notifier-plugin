@@ -16,20 +16,23 @@
 
   <groupId>nz.co.jammehcow</groupId>
   <artifactId>discord-notifier</artifactId>
-  <version>1.4.15-SNAPSHOT</version>
+  <version>${revision}${changelist}</version>
   <packaging>hpi</packaging>
 
   <properties>
+    <revision>1.4.15</revision>
+    <changelist>-SNAPSHOT</changelist>
+    <gitHubRepo>jenkinsci/discord-notifier-plugin</gitHubRepo>
     <jenkins.version>2.235.1</jenkins.version>
     <java.level>8</java.level>
     <no-test-jar>false</no-test-jar>
   </properties>
 
   <scm>
-    <connection>scm:git:git://github.com/jenkinsci/discord-notifier-plugin.git</connection>
-    <developerConnection>scm:git:git@github.com:jenkinsci/discord-notifier-plugin.git</developerConnection>
-    <url>https://github.com/jenkinsci/discord-notifier-plugin</url>
-    <tag>HEAD</tag>
+    <connection>scm:git:git://github.com/${gitHubRepo}.git</connection>
+    <developerConnection>scm:git:git@github.com:${gitHubRepo}.git</developerConnection>
+    <url>https://github.com/${gitHubRepo}</url>
+    <tag>${scmTag}</tag>
   </scm>
 
   <licenses>
