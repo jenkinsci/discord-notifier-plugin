@@ -36,6 +36,7 @@ public class WebhookPublisher extends Notifier {
     private final String customAvatarUrl;
     private final String customUsername;
     private final boolean sendOnStateChange;
+    private final boolean sendOnlyFailed;
     private boolean enableUrlLinking;
     private final boolean enableArtifactList;
     private final boolean enableFooterInfo;
@@ -56,7 +57,7 @@ public class WebhookPublisher extends Notifier {
             String branchName,
             String customAvatarUrl,
             String customUsername,
-            boolean enableUrlLinking,
+            boolean sendOnStateFailed, boolean sendOnlyFailed, boolean enableUrlLinking,
             boolean enableArtifactList,
             boolean enableFooterInfo,
             boolean showChangeset,
@@ -67,6 +68,7 @@ public class WebhookPublisher extends Notifier {
         this.webhookURL = webhookURL;
         this.thumbnailURL = thumbnailURL;
         this.sendOnStateChange = sendOnStateChange;
+        this.sendOnlyFailed = sendOnlyFailed;
         this.enableUrlLinking = enableUrlLinking;
         this.enableArtifactList = enableArtifactList;
         this.enableFooterInfo = enableFooterInfo;
@@ -112,6 +114,11 @@ public class WebhookPublisher extends Notifier {
     public boolean isSendOnStateChange() {
         return this.sendOnStateChange;
     }
+
+    public boolean isSendOnlyFailed() {
+        return this.sendOnlyFailed;
+    }
+
 
     public boolean isEnableUrlLinking() {
         return this.enableUrlLinking;
@@ -216,6 +223,12 @@ public class WebhookPublisher extends Notifier {
         if (this.sendOnStateChange) {
             if (build.getPreviousBuild() != null && build.getResult().equals(build.getPreviousBuild().getResult())) {
                 // Stops the webhook payload being created if the status is the same as the previous
+                return true;
+            }
+        }
+
+        if (this.sendOnlyFailed) {
+            if (!build.getResult().equals(Result.FAILURE)) {
                 return true;
             }
         }

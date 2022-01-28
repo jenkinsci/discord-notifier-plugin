@@ -6,6 +6,9 @@
   <f:entry title="Only send on state change" field="sendOnStateChange">
     <f:checkbox />
   </f:entry>
+  <f:entry title="Send only failed" field="sendOnlyFailed">
+    <f:checkbox />
+  </f:entry>
   <f:advanced>
     <f:entry title="Title" field="statusTitle">
       <f:textbox />
