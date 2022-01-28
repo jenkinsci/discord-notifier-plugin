@@ -29,6 +29,8 @@ There are a few options you can choose from:
    - The URL of the webhook (pretty self-explanatory) provided by Discord
  - Send only on state change
    - Checking this will only send the message when the state of the current build differs from the previous
+ - Send only failed
+   - checking this will only send the failed job.  
  - Advanced:
    - thumbnail
      - If set, the image under the URL shows up on the right side of Discord message.
