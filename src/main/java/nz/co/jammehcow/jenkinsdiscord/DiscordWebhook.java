@@ -61,7 +61,7 @@ class DiscordWebhook {
         this.webhookUrl = url;
         this.obj = new JSONObject();
         this.obj.put("username", "Jenkins");
-        this.obj.put("avatar_url", "https://wiki.jenkins-ci.org/download/attachments/2916393/headshot.png");
+        this.obj.put("avatar_url", "https://get.jenkins.io/art/jenkins-logo/1024x1024/headshot.png");
         this.embed = new JSONObject();
         this.fields = new JSONArray();
     }
