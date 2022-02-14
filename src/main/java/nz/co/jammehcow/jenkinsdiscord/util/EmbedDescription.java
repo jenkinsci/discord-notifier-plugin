@@ -49,7 +49,7 @@ public class EmbedDescription {
                 try {
                     String dummy = String.format(scmWebUrl, "");
                     withLinks = true;
-                } catch (IllegalFormatException ex) {
+                } catch (Exception ex) {
                     withLinks = false;
                 }
 
