@@ -45,6 +45,10 @@ public class DynamicFieldContainer {
   public static DynamicFieldContainer of(String fieldsString) {
     DynamicFieldContainer fieldContainer = new DynamicFieldContainer();
 
+    if(fieldsString.length() == 0) {
+        return fieldContainer;
+    }
+
     try {
       for (String s : fieldsString.split(",\\s*")) {
         String[] pair = s.split(":", 2);
