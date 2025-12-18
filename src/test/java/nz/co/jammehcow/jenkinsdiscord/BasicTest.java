@@ -1,35 +1,24 @@
 package nz.co.jammehcow.jenkinsdiscord;
 
+import org.jenkinsci.plugins.workflow.steps.StepConfigTester;
+import org.junit.Rule;
 import org.junit.Test;
-
-import static org.junit.Assert.fail;
+import org.jvnet.hudson.test.JenkinsRule;
 
 public class BasicTest {
-    @Test
-    public void webhookClassDoesntThrow() {
-        try {
-            DiscordWebhook wh = new DiscordWebhook("http://exampl.e");
-            wh.setContent("content");
-            wh.setDescription("desc");
-            wh.setStatus(DiscordWebhook.StatusColor.GREEN);
-            wh.send();
-        } catch (Exception e) {
-            fail();
-        }
-    }
+    @Rule
+    public JenkinsRule j = new JenkinsRule();
 
     @Test
-    public void pipelineDoesntThrow() {
+    public void configRoundTrip() {
         try {
             DiscordPipelineStep step = new DiscordPipelineStep("http://exampl.e");
             step.setTitle("Test title");
-            DiscordPipelineStep.DiscordPipelineStepExecution execution =
-                    new DiscordPipelineStep.DiscordPipelineStepExecution();
-            execution.step = step;
-            execution.listener = () -> System.out;
-            execution.run();
+
+            DiscordPipelineStep roundtrippedStep = new StepConfigTester(this.j).configRoundTrip(step);
+            this.j.assertEqualDataBoundBeans(step, roundtrippedStep);
         } catch (Exception e) {
-            fail();
+            throw new RuntimeException(e);
         }
     }
 }

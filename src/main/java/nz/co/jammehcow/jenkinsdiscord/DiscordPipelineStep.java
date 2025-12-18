@@ -1,52 +1,44 @@
 package nz.co.jammehcow.jenkinsdiscord;
 
-import static nz.co.jammehcow.jenkinsdiscord.DiscordWebhook.DESCRIPTION_LIMIT;
-import static nz.co.jammehcow.jenkinsdiscord.DiscordWebhook.FOOTER_LIMIT;
-import static nz.co.jammehcow.jenkinsdiscord.DiscordWebhook.StatusColor;
-import static nz.co.jammehcow.jenkinsdiscord.DiscordWebhook.TITLE_LIMIT;
-
+import club.minnced.discord.webhook.WebhookClient;
+import club.minnced.discord.webhook.send.WebhookMessage;
 import edu.umd.cs.findbugs.annotations.NonNull;
 import hudson.Extension;
-import hudson.FilePath;
-import hudson.model.Result;
 import hudson.model.Run;
 import hudson.model.TaskListener;
-import javax.inject.Inject;
 import jenkins.model.JenkinsLocationConfiguration;
-import nz.co.jammehcow.jenkinsdiscord.exception.WebhookException;
-import nz.co.jammehcow.jenkinsdiscord.util.EmbedDescription;
+import nz.co.jammehcow.jenkinsdiscord.util.EmbedUtil;
+import org.apache.commons.lang.StringUtils;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepDescriptorImpl;
 import org.jenkinsci.plugins.workflow.steps.AbstractStepImpl;
-import org.jenkinsci.plugins.workflow.steps.AbstractSynchronousNonBlockingStepExecution;
-import org.jenkinsci.plugins.workflow.steps.StepContextParameter;
+import org.jenkinsci.plugins.workflow.steps.StepContext;
+import org.jenkinsci.plugins.workflow.steps.StepExecution;
+import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.Charset;
-import java.nio.file.InvalidPathException;
+
 public class DiscordPipelineStep extends AbstractStepImpl {
     private final String webhookURL;
 
-    private String title;
-    private String link;
-    private String description;
-    private String footer;
-    private String image;
-    private String thumbnail;
-    private String result;
-    private String notes;
-    private String customAvatarUrl;
-    private String customUsername;
-    private String customFile;
-    private DynamicFieldContainer dynamicFieldContainer;
-    private boolean successful;
-    private boolean unstable;
-    private boolean enableArtifactsList;
-    private boolean showChangeset;
-    private String scmWebUrl;
+    private String title = null;
+    private String link = null;
+    private String description = null;
+    private String footer = null;
+    private String image = null;
+    private String thumbnail = null;
+    private String result = null;
+    private String notes = null;
+    private String customAvatarUrl = null;
+    private String customUsername = null;
+    private String customFile = null;
+    private DynamicFieldContainer dynamicFieldContainer = null;
+    private boolean successful = false;
+    private boolean unstable = false;
+    private boolean enableArtifactsList = false;
+    private boolean prettyArtifactsList = false;
+    private boolean showChangeset = false;
+    private String scmWebUrl = null;
 
     @DataBoundConstructor
     public DiscordPipelineStep(String webhookURL) {
@@ -54,47 +46,47 @@ public class DiscordPipelineStep extends AbstractStepImpl {
     }
 
     public String getWebhookURL() {
-        return webhookURL;
+        return this.webhookURL;
     }
 
     public String getTitle() {
-        return title;
+        return this.title;
     }
 
     @DataBoundSetter
     public void setTitle(String title) {
-        this.title = title;
+        this.title = StringUtils.stripToNull(title);
     }
 
     public String getLink() {
-        return link;
+        return this.link;
     }
 
     @DataBoundSetter
     public void setLink(String link) {
-        this.link = link;
+        this.link = StringUtils.stripToNull(link);
     }
 
     public String getDescription() {
-        return description;
+        return this.description;
     }
 
     @DataBoundSetter
     public void setDescription(String description) {
-        this.description = description;
+        this.description = StringUtils.stripToNull(description);
     }
 
     public String getFooter() {
-        return footer;
+        return this.footer;
     }
 
     @DataBoundSetter
     public void setFooter(String footer) {
-        this.footer = footer;
+        this.footer = StringUtils.stripToNull(footer);
     }
 
     public boolean isSuccessful() {
-        return successful;
+        return this.successful;
     }
 
     @DataBoundSetter
@@ -103,7 +95,7 @@ public class DiscordPipelineStep extends AbstractStepImpl {
     }
 
     public boolean isUnstable() {
-        return unstable;
+        return this.unstable;
     }
 
     @DataBoundSetter
@@ -111,67 +103,71 @@ public class DiscordPipelineStep extends AbstractStepImpl {
         this.unstable = unstable;
     }
 
-    @DataBoundSetter
-    public void setImage(String url) {
-        this.image = url;
+    public String getImage() {
+        return this.image;
     }
 
-    public String getImage() {
-        return image;
+    @DataBoundSetter
+    public void setImage(String url) {
+        this.image = StringUtils.stripToNull(url);
+    }
+
+    public String getThumbnail() {
+        return this.thumbnail;
     }
 
     @DataBoundSetter
     public void setThumbnail(String url) {
-        this.thumbnail = url;
+        this.thumbnail = StringUtils.stripToNull(url);
     }
 
-    public String getThumbnail() {
-        return thumbnail;
+    public String getResult() {
+        return this.result;
     }
 
     @DataBoundSetter
     public void setResult(String result) {
-        this.result = result;
+        this.result = StringUtils.stripToNull(result);
     }
 
-    public String getResult() {
-        return result;
+    public String getNotes() {
+        return this.notes;
     }
 
     @DataBoundSetter
     public void setNotes(String notes) {
-        this.notes = notes;
+        this.notes = StringUtils.stripToNull(notes);
     }
 
-    public String getNotes() {
-        return notes;
+    public String getCustomAvatarUrl() {
+        return this.customAvatarUrl;
     }
 
     @DataBoundSetter
     public void setCustomAvatarUrl(String customAvatarUrl) {
-        this.customAvatarUrl = customAvatarUrl;
+        this.customAvatarUrl = StringUtils.stripToNull(customAvatarUrl);
     }
 
-    public String getCustomAvatarUrl() {
-        return customAvatarUrl;
+    public String getCustomUsername() {
+        return this.customUsername;
     }
 
     @DataBoundSetter
     public void setCustomUsername(String customUsername) {
-        this.customUsername = customUsername;
+        this.customUsername = StringUtils.stripToNull(customUsername);
     }
 
-    public String getCustomUsername() {
-        return customUsername;
+    public String getCustomFile() {
+        return this.customFile;
     }
 
     @DataBoundSetter
     public void setCustomFile(String customFile) {
-        this.customFile = customFile;
+        this.customFile = StringUtils.stripToNull(customFile);
     }
 
-    public String getCustomFile() {
-        return customFile;
+    public boolean getEnableArtifactsList() {
+        return this.enableArtifactsList;
     }
 
     @DataBoundSetter
@@ -179,8 +175,17 @@ public class DiscordPipelineStep extends AbstractStepImpl {
         this.enableArtifactsList = enable;
     }
 
-    public boolean getEnableArtifactsList() {
-        return enableArtifactsList;
+    public boolean getPrettyArtifactsList() {
+        return this.prettyArtifactsList;
+    }
+
+    @DataBoundSetter
+    public void setPrettyArtifactsList(boolean enable) {
+        this.prettyArtifactsList = enable;
+    }
+
+    public boolean getShowChangeset() {
+        return this.showChangeset;
     }
 
     @DataBoundSetter
@@ -188,17 +193,20 @@ public class DiscordPipelineStep extends AbstractStepImpl {
         this.showChangeset = show;
     }
 
-    public boolean getShowChangeset() {
-        return showChangeset;
+    public String getScmWebUrl() {
+        return this.scmWebUrl;
     }
 
     @DataBoundSetter
     public void setScmWebUrl(String url) {
-        this.scmWebUrl = url;
+        this.scmWebUrl = StringUtils.stripToNull(url);
     }
 
-    public String getScmWebUrl() {
-        return scmWebUrl;
+    public String getDynamicFieldContainer() {
+        if (this.dynamicFieldContainer == null) {
+            return "";
+        }
+        return this.dynamicFieldContainer.toString();
     }
 
     @DataBoundSetter
@@ -206,142 +214,55 @@ public class DiscordPipelineStep extends AbstractStepImpl {
         this.dynamicFieldContainer = DynamicFieldContainer.of(fieldsString);
     }
 
-    public String getDynamicFieldContainer() {
-        if(dynamicFieldContainer == null){
-            return "";
-        }
-        return dynamicFieldContainer.toString();
+    public DynamicFieldContainer getActualDynamicFieldContainer() {
+        return this.dynamicFieldContainer;
     }
 
-    public static class DiscordPipelineStepExecution extends AbstractSynchronousNonBlockingStepExecution<Void> {
+    @Override
+    public StepExecution start(StepContext context) throws Exception {
+        return super.start(context);
+    }
 
-        @Inject
-        transient DiscordPipelineStep step;
+    public static class DiscordPipelineStepExecution extends SynchronousNonBlockingStepExecution<Void> {
+        private static final long serialVersionUID = 1L;
+        private final transient DiscordPipelineStep step;
 
-        @StepContextParameter
-        transient TaskListener listener;
+        protected DiscordPipelineStepExecution(DiscordPipelineStep step, StepContext context) {
+            super(context);
+            this.step = step;
+        }
 
         @Override
         protected Void run() throws Exception {
+            TaskListener listener = getContext().get(TaskListener.class);
+            Run build = getContext().get(Run.class);
+
             listener.getLogger().println("Sending notification to Discord.");
 
-            DiscordWebhook.StatusColor statusColor;
-            statusColor = StatusColor.YELLOW;
-            if (step.getResult() == null) {
-                if (step.isSuccessful()) statusColor = DiscordWebhook.StatusColor.GREEN;
-                if (step.isSuccessful() && step.isUnstable()) statusColor = DiscordWebhook.StatusColor.YELLOW;
-                if (!step.isSuccessful() && !step.isUnstable()) statusColor = DiscordWebhook.StatusColor.RED;
-            } else if (step.getResult().equals(Result.SUCCESS.toString())) {
-                statusColor = StatusColor.GREEN;
-            } else if (step.getResult().equals(Result.UNSTABLE.toString())) {
-                statusColor = StatusColor.YELLOW;
-            } else if (step.getResult().equals(Result.FAILURE.toString())) {
-                statusColor = StatusColor.RED;
-            } else if (step.getResult().equals(Result.ABORTED.toString())) {
-                statusColor = StatusColor.GREY;
-            } else {
-                listener.getLogger().println(step.getResult() + " is not a valid result");
-            }
+            WebhookMessage message = EmbedUtil.createEmbed(
+                    build,
+                    JenkinsLocationConfiguration.get(),
+                    this.step,
+                    getContext(),
+                    listener
+            );
 
-            DiscordWebhook wh = new DiscordWebhook(step.getWebhookURL());
-            wh.setTitle(checkLimitAndTruncate("title", step.getTitle(), TITLE_LIMIT));
-            wh.setURL(step.getLink());
-            wh.setThumbnail(step.getThumbnail());
-
-            if (step.getEnableArtifactsList() || step.getShowChangeset()) {
-                JenkinsLocationConfiguration globalConfig = JenkinsLocationConfiguration.get();
-                Run build = getContext().get(Run.class);
-                wh.setDescription(new EmbedDescription(
-                                build,
-                                globalConfig,
-                                step.getDescription(),
-                                step.getEnableArtifactsList(),
-                                step.getShowChangeset(),
-                                step.getScmWebUrl()
-                        ).toString()
-                );
-            } else {
-                wh.setDescription(checkLimitAndTruncate("description", step.getDescription(), DESCRIPTION_LIMIT));
-            }
-
-            wh.setImage(step.getImage());
-            wh.setFooter(checkLimitAndTruncate("footer", step.getFooter(), FOOTER_LIMIT));
-            wh.setStatus(statusColor);
-            wh.setContent(step.getNotes());
-
-            if (step.getCustomAvatarUrl() != null) {
-                wh.setCustomAvatarUrl(step.getCustomAvatarUrl());
-            }
-
-            if (step.getCustomUsername() != null) {
-                wh.setCustomUsername(step.getCustomUsername());
-            }
-
-            if (step.getCustomFile() != null) {
-                InputStream fis = getFileInputStream(step.getCustomFile());
-                wh.setFile(fis, step.getCustomFile());
-            }
-
-            // Add all key value field pairs to the webhook
-            addDynamicFieldsToWebhook(wh);
-
-            try {
-                wh.send();
-            } catch (WebhookException e) {
+            try (WebhookClient client = WebhookClient.withUrl(this.step.getWebhookURL())) {
+                listener.getLogger().println("Sending notification to Discord.");
+                client.send(message).get();
+            } catch (Exception e) {
                 e.printStackTrace(listener.getLogger());
             }
 
             return null;
         }
-
-        private InputStream getFileInputStream(String file) throws IOException, InterruptedException {
-            FilePath ws = getContext().get(FilePath.class);
-            if (ws == null) {
-                throw new IllegalStateException("Could not acquire FilePath");
-            }
-            final FilePath fp = ws.child(file);
-            if (fp.exists()) {
-                try {
-                    return fp.read();
-                } catch (InvalidPathException var3) {
-                    throw new IOException(var3);
-                }
-            } else {
-                String message = "No such file: " + file;
-                return new ByteArrayInputStream(message.getBytes(Charset.defaultCharset()));
-            }
-        }
-
-        /**
-         * Add all key value field pairs to the webhook
-         */
-        private void addDynamicFieldsToWebhook(DiscordWebhook wh){
-            // Early exit if we don't have any dynamicFieldContainer set
-            if(step.dynamicFieldContainer == null){
-                return;
-            }
-            // Go through all fields and add them to the webhook
-            step.dynamicFieldContainer.getFields().forEach(pair -> wh.addField(pair.getKey(), pair.getValue()));
-        }
-
-        private String checkLimitAndTruncate(String fieldName, String value, int limit) {
-            if (value == null) return "";
-            if (value.length() > limit) {
-                listener.getLogger().printf("Warning: '%s' field has more than %d characters (%d). It will be truncated.%n",
-                        fieldName,
-                        limit,
-                        value.length());
-                return value.substring(0, limit);
-            }
-            return value;
-        }
-
-        private static final long serialVersionUID = 1L;
     }
 
     @Extension
     public static class DescriptorImpl extends AbstractStepDescriptorImpl {
-        public DescriptorImpl() { super(DiscordPipelineStepExecution.class); }
+        public DescriptorImpl() {
+            super(DiscordPipelineStepExecution.class);
+        }
 
         @Override
         public String getFunctionName() {
