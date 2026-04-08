@@ -17,6 +17,8 @@ import org.jenkinsci.plugins.workflow.steps.SynchronousNonBlockingStepExecution;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
+import javax.inject.Inject;
+
 
 public class DiscordPipelineStep extends AbstractStepImpl {
     private final String webhookURL;
@@ -227,6 +229,7 @@ public class DiscordPipelineStep extends AbstractStepImpl {
         private static final long serialVersionUID = 1L;
         private final transient DiscordPipelineStep step;
 
+        @Inject
         protected DiscordPipelineStepExecution(DiscordPipelineStep step, StepContext context) {
             super(context);
             this.step = step;

@@ -28,13 +28,11 @@ import java.nio.charset.Charset;
 import java.nio.file.InvalidPathException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Queue;
 
 public class EmbedUtil {
     private static final int MAX_CONTENT_LENGTH = 2000;
@@ -231,6 +229,9 @@ public class EmbedUtil {
         String username = EmbedUtil.withFallback(customUsername, "Jenkins");
         String avatar = EmbedUtil.withFallback(customAvatarUrl, "https://get.jenkins.io/art/jenkins-logo/1024x1024/headshot.png");
         embedBuilder.setAuthor(new EmbedAuthor(username, avatar, null));
+
+        messageBuilder.setUsername(username);
+        messageBuilder.setAvatarUrl(avatar);
 
         if (dynamicFieldContainer != null) {
             dynamicFieldContainer.getFields().forEach(pair -> {
