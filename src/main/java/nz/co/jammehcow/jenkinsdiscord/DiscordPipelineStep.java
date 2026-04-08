@@ -18,6 +18,7 @@ import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.DataBoundSetter;
 
 import javax.inject.Inject;
+import java.util.Objects;
 
 
 public class DiscordPipelineStep extends AbstractStepImpl {
@@ -237,8 +238,8 @@ public class DiscordPipelineStep extends AbstractStepImpl {
 
         @Override
         protected Void run() throws Exception {
-            TaskListener listener = getContext().get(TaskListener.class);
-            Run build = getContext().get(Run.class);
+            TaskListener listener = Objects.requireNonNull(getContext().get(TaskListener.class));
+            Run<?, ?> build = Objects.requireNonNull(getContext().get(Run.class));
 
             listener.getLogger().println("Sending notification to Discord.");
 

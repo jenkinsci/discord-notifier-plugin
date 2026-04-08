@@ -212,6 +212,7 @@ public class WebhookPublisher extends Notifier {
         WebhookMessage message = EmbedUtil.createEmbed(
                 build,
                 JenkinsLocationConfiguration.get(),
+                env,
                 listener,
                 title,
                 null,
@@ -312,6 +313,7 @@ public class WebhookPublisher extends Notifier {
         WebhookMessage message = EmbedUtil.createEmbed(
                 build,
                 globalConfig,
+                env,
                 listener,
                 title,
                 this.enableUrlLinking ? globalConfig.getUrl() + build.getUrl() : null,
