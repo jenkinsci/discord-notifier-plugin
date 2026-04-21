@@ -207,6 +207,10 @@ class DiscordWebhook {
                     Unirest.config().proxy(new Proxy(proxyIP, proxyPort));
                 }
             }
+            
+            // Explicitly set timeouts to prevent hanging plugin execution
+            Unirest.config().connectTimeout(30000).socketTimeout(60000);
+            
             HttpResponse<JsonNode> response;
             if (file != null) {
                 response = Unirest.post(this.webhookUrl)
