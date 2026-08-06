@@ -12,7 +12,7 @@ import jenkins.model.JenkinsLocationConfiguration;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
+import hudson.Util;
 
 /**
  * @author jammehcow
@@ -36,7 +36,7 @@ public class EmbedDescription {
             String scmWebUrl
     ) {
         String artifactsURL = globalConfig.getUrl() + build.getUrl() + "artifact/";
-        this.prefix = StringUtils.trimToNull(prefix);
+        this.prefix = Util.fixEmptyAndTrim(prefix);
 
         if (showChangeset) {
             ArrayList<Object> changes = new ArrayList<>();
