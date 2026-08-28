@@ -22,6 +22,7 @@
     <gitHubRepo>jenkinsci/discord-notifier-plugin</gitHubRepo>
     <jenkins.baseline>2.528</jenkins.baseline>
     <jenkins.version>${jenkins.baseline}.3</jenkins.version>
+    <ban-commons-lang-2.skip>false</ban-commons-lang-2.skip>
     <spotbugs.effort>Max</spotbugs.effort>
     <spotbugs.threshold>Medium</spotbugs.threshold>
     <hpi.bundledArtifacts>unirest-java</hpi.bundledArtifacts>
