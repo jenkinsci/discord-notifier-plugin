@@ -20,6 +20,7 @@ import hudson.Util;
 
 public class EmbedDescription {
     private static final int maxEmbedStringLength = 2048; // The maximum length of an embed description.
+    static final String nullCommitDisplayStr = "null  ";
 
     private LinkedList<String> changesList = new LinkedList<>();
     private LinkedList<String> artifactsList = new LinkedList<>();
@@ -60,10 +61,7 @@ public class EmbedDescription {
                     ChangeLogSet.Entry entry = (ChangeLogSet.Entry) o;
 
                     String commitID = entry.getCommitId();
-                    String commitDisplayStr;
-                    if (commitID == null) commitDisplayStr = "null  ";
-                    else if (commitID.length() < 6) commitDisplayStr = commitID;
-                    else commitDisplayStr = commitID.substring(0, 6);
+                    String commitDisplayStr = getCommitDisplayStr(commitID);
 
                     String msg = entry.getMsg().trim();
                     int nl = msg.indexOf("\n");
@@ -134,6 +132,10 @@ public class EmbedDescription {
     @Override
     public String toString() {
         return this.finalDescription;
+    }
+
+    static String getCommitDisplayStr(String commitID) {
+        return commitID == null ? nullCommitDisplayStr : commitID;
     }
 
     // https://support.discord.com/hc/en-us/articles/210298617
