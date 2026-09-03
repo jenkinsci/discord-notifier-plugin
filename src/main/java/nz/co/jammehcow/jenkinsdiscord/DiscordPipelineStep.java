@@ -47,6 +47,10 @@ public class DiscordPipelineStep extends AbstractStepImpl {
     private boolean enableArtifactsList;
     private boolean showChangeset;
     private String scmWebUrl;
+    private String successColor;
+    private String unstableColor;
+    private String failureColor;
+    private String abortedColor;
 
     @DataBoundConstructor
     public DiscordPipelineStep(String webhookURL) {
@@ -201,6 +205,42 @@ public class DiscordPipelineStep extends AbstractStepImpl {
         return scmWebUrl;
     }
 
+    public String getSuccessColor() {
+        return successColor;
+    }
+
+    @DataBoundSetter
+    public void setSuccessColor(String successColor) {
+        this.successColor = successColor;
+    }
+
+    public String getUnstableColor() {
+        return unstableColor;
+    }
+
+    @DataBoundSetter
+    public void setUnstableColor(String unstableColor) {
+        this.unstableColor = unstableColor;
+    }
+
+    public String getFailureColor() {
+        return failureColor;
+    }
+
+    @DataBoundSetter
+    public void setFailureColor(String failureColor) {
+        this.failureColor = failureColor;
+    }
+
+    public String getAbortedColor() {
+        return abortedColor;
+    }
+
+    @DataBoundSetter
+    public void setAbortedColor(String abortedColor) {
+        this.abortedColor = abortedColor;
+    }
+
     @DataBoundSetter
     public void setDynamicFieldContainer(String fieldsString) {
         this.dynamicFieldContainer = DynamicFieldContainer.of(fieldsString);
@@ -243,6 +283,10 @@ public class DiscordPipelineStep extends AbstractStepImpl {
                 listener.getLogger().println(step.getResult() + " is not a valid result");
             }
 
+            int resolvedColor = resolveColor(listener, statusColor,
+                    step.getSuccessColor(), step.getUnstableColor(),
+                    step.getFailureColor(), step.getAbortedColor());
+
             DiscordWebhook wh = new DiscordWebhook(step.getWebhookURL());
             wh.setTitle(checkLimitAndTruncate("title", step.getTitle(), TITLE_LIMIT));
             wh.setURL(step.getLink());
@@ -266,7 +310,7 @@ public class DiscordPipelineStep extends AbstractStepImpl {
 
             wh.setImage(step.getImage());
             wh.setFooter(checkLimitAndTruncate("footer", step.getFooter(), FOOTER_LIMIT));
-            wh.setStatus(statusColor);
+            wh.setStatusByColor(resolvedColor);
             wh.setContent(step.getNotes());
 
             if (step.getCustomAvatarUrl() != null) {
@@ -322,6 +366,61 @@ public class DiscordPipelineStep extends AbstractStepImpl {
             }
             // Go through all fields and add them to the webhook
             step.dynamicFieldContainer.getFields().forEach(pair -> wh.addField(pair.getKey(), pair.getValue()));
+        }
+
+        /**
+         * Resolves the integer color code to use for the embed.
+         * Maps the given default {@link DiscordWebhook.StatusColor} to the matching custom color string
+         * and returns its parsed integer value. Falls back to the default color code when the custom
+         * string is null, empty, or cannot be parsed.
+         *
+         * @param defaultColor  the status color determined by the build result
+         * @param successColor  custom hex/decimal color string for successful builds, or null/empty for default
+         * @param unstableColor custom hex/decimal color string for unstable builds, or null/empty for default
+         * @param failureColor  custom hex/decimal color string for failed builds, or null/empty for default
+         * @param abortedColor  custom hex/decimal color string for aborted builds, or null/empty for default
+         * @return the resolved integer color code
+         */
+        private static int resolveColor(
+                TaskListener listener,
+                DiscordWebhook.StatusColor defaultColor,
+                String successColor, String unstableColor,
+                String failureColor, String abortedColor) {
+            String custom;
+            String customFieldName;
+            switch (defaultColor) {
+                case GREEN:
+                    custom = successColor;
+                    customFieldName = "successColor";
+                    break;
+                case YELLOW:
+                    custom = unstableColor;
+                    customFieldName = "unstableColor";
+                    break;
+                case RED:
+                    custom = failureColor;
+                    customFieldName = "failureColor";
+                    break;
+                case GREY:
+                    custom = abortedColor;
+                    customFieldName = "abortedColor";
+                    break;
+                default:
+                    custom = null;
+                    customFieldName = "defaultColor";
+                    break;
+            }
+            if (custom != null && !custom.isEmpty()) {
+                try {
+                    return DiscordWebhook.parseColor(custom);
+                } catch (NumberFormatException e) {
+                    listener.getLogger().println(
+                            "[Discord Notifier] Invalid " + customFieldName + " value '" + custom
+                                    + "'. Using default color."
+                    );
+                }
+            }
+            return (int) defaultColor.getCode();
         }
 
         private String checkLimitAndTruncate(String fieldName, String value, int limit) {
