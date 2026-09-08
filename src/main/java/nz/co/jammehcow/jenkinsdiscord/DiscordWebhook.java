@@ -11,6 +11,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.InputStream;
+import java.util.regex.Pattern;
 
 /**
  * Author: jammehcow.
@@ -27,6 +28,7 @@ class DiscordWebhook {
     static final int TITLE_LIMIT = 256;
     static final int DESCRIPTION_LIMIT = 2048;
     static final int FOOTER_LIMIT = 2048;
+    private static final Pattern SIX_DIGIT_HEX_COLOR = Pattern.compile("[0-9A-Fa-f]{6}");
 
     enum StatusColor {
         /**
@@ -45,11 +47,46 @@ class DiscordWebhook {
          * Grey. Just grey.
          */
         GREY(13487565);
-        private long code;
+        private final long code;
 
         StatusColor(int code) {
             this.code = code;
         }
+
+        public long getCode() {
+            return code;
+        }
+    }
+
+    /**
+     * Parses a color string into an integer color code.
+     * Accepts hex strings with or without a leading '#' (e.g. "#19A719" or "19A719"),
+     * as well as plain decimal integers (e.g. "1681177").
+     *
+     * @param colorStr the color string to parse
+     * @return the integer color code
+     * @throws NumberFormatException if the string cannot be parsed as a color
+     */
+    static int parseColor(String colorStr) {
+        String s = colorStr.trim();
+        int parsed;
+        try {
+            if (s.startsWith("#")) {
+                parsed = Integer.parseInt(s.substring(1), 16);
+            } else if (SIX_DIGIT_HEX_COLOR.matcher(s).matches()) {
+                parsed = Integer.parseInt(s, 16);
+            } else {
+                parsed = Integer.parseInt(s);
+            }
+        } catch (NumberFormatException e) {
+            throw new NumberFormatException("Cannot parse '" + colorStr + "' as a color code");
+        }
+
+        if (parsed < 0 || parsed > 0xFFFFFF) {
+            throw new NumberFormatException("Color '" + colorStr + "' is out of range (0..16777215)");
+        }
+
+        return parsed;
     }
 
     /**
@@ -111,11 +148,22 @@ class DiscordWebhook {
     /**
      * Sets the build status (for the embed's color).
      *
-     * @param isSuccess if the build is successful
+     * @param color the status color
      * @return this
      */
-    public DiscordWebhook setStatus(StatusColor isSuccess) {
-        this.embed.put("color", isSuccess.code);
+    public DiscordWebhook setStatus(StatusColor color) {
+        this.embed.put("color", color.getCode());
+        return this;
+    }
+
+    /**
+     * Sets the embed color directly using a raw integer color code.
+     *
+     * @param colorCode the integer color code
+     * @return this
+     */
+    public DiscordWebhook setStatusByColor(int colorCode) {
+        this.embed.put("color", colorCode);
         return this;
     }
 

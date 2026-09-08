@@ -55,6 +55,9 @@ public class WebhookPublisher extends Notifier {
     private static final String NAME = "Discord Notifier";
     private static final String SHORT_NAME = "discord-notifier";
     private final String scmWebUrl;
+    private String successColor;
+    private String unstableColor;
+    private String failureColor;
 
     @DataBoundConstructor
     public WebhookPublisher(
@@ -171,6 +174,33 @@ public class WebhookPublisher extends Notifier {
         return this.scmWebUrl;
     }
 
+    public String getSuccessColor() {
+        return this.successColor;
+    }
+
+    @DataBoundSetter
+    public void setSuccessColor(String successColor) {
+        this.successColor = successColor;
+    }
+
+    public String getUnstableColor() {
+        return this.unstableColor;
+    }
+
+    @DataBoundSetter
+    public void setUnstableColor(String unstableColor) {
+        this.unstableColor = unstableColor;
+    }
+
+    public String getFailureColor() {
+        return this.failureColor;
+    }
+
+    @DataBoundSetter
+    public void setFailureColor(String failureColor) {
+        this.failureColor = failureColor;
+    }
+
     @Override
     public boolean needsToRunAfterFinalized() {
         return true;
@@ -264,12 +294,8 @@ public class WebhookPublisher extends Notifier {
             wh.setFile(build.getLogInputStream(), "build" + build.getNumber() + ".log");
         }
 
-        DiscordWebhook.StatusColor statusColor = DiscordWebhook.StatusColor.GREEN;
         Result buildresult = build.getResult();
         if (!buildresult.isCompleteBuild()) return true;
-        if (buildresult.isBetterOrEqualTo(Result.SUCCESS)) statusColor = DiscordWebhook.StatusColor.GREEN;
-        if (buildresult.isWorseThan(Result.SUCCESS)) statusColor = DiscordWebhook.StatusColor.YELLOW;
-        if (buildresult.isWorseThan(Result.UNSTABLE)) statusColor = DiscordWebhook.StatusColor.RED;
 
         AbstractProject project = build.getProject();
         StringBuilder combinationString = new StringBuilder();
@@ -330,7 +356,7 @@ public class WebhookPublisher extends Notifier {
         );
 
         addDynamicFieldsToWebhook(dynamicFieldContainer, wh, env);
-        wh.setStatus(statusColor);
+        wh.setStatusByColor(resolveColor(listener, buildresult, successColor, unstableColor, failureColor));
 
         if (this.enableFooterInfo)
             wh.setFooter("Jenkins v" + build.getHudsonVersion() + ", " + getDescriptor().getDisplayName() + " v" + getDescriptor().getPluginVersion());
@@ -355,6 +381,52 @@ public class WebhookPublisher extends Notifier {
         }
         // Go through all fields and add them to the webhook
         dynamicFieldContainer.getFields().forEach(pair -> wh.addField(pair.getKey() + ":", env.expand(pair.getValue())));
+    }
+
+    /**
+     * Resolves the integer color code to use for the embed based on the build result.
+     * Uses the provided custom color string when non-empty and parseable; falls back to the default.
+     *
+     * @param buildResult   the build result used to select the appropriate color bucket
+     * @param successColor  custom hex/decimal color string for successful builds, or null/empty for default
+     * @param unstableColor custom hex/decimal color string for unstable builds, or null/empty for default
+     * @param failureColor  custom hex/decimal color string for failed builds, or null/empty for default
+     * @return the resolved integer color code
+     */
+    private static int resolveColor(
+            BuildListener listener,
+            Result buildResult,
+            String successColor,
+            String unstableColor,
+            String failureColor
+    ) {
+        String custom;
+        String customFieldName;
+        DiscordWebhook.StatusColor defaultColor;
+        if (buildResult.isBetterOrEqualTo(Result.SUCCESS)) {
+            custom = successColor;
+            customFieldName = "successColor";
+            defaultColor = DiscordWebhook.StatusColor.GREEN;
+        } else if (buildResult.isWorseThan(Result.UNSTABLE)) {
+            custom = failureColor;
+            customFieldName = "failureColor";
+            defaultColor = DiscordWebhook.StatusColor.RED;
+        } else {
+            custom = unstableColor;
+            customFieldName = "unstableColor";
+            defaultColor = DiscordWebhook.StatusColor.YELLOW;
+        }
+        if (custom != null && !custom.isEmpty()) {
+            try {
+                return DiscordWebhook.parseColor(custom);
+            } catch (NumberFormatException e) {
+                listener.getLogger().println(
+                        "[Discord Notifier] Invalid " + customFieldName + " value '" + custom
+                                + "'. Using default color."
+                );
+            }
+        }
+        return (int) defaultColor.getCode();
     }
 
     public BuildStepMonitor getRequiredMonitorService() {
