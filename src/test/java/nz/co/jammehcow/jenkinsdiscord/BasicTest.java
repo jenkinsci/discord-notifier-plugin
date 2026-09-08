@@ -11,7 +11,7 @@ class BasicTest {
 
     @Test
     void webhookThrowsOnUnreachableHost() {
-        DiscordWebhook wh = new DiscordWebhook("http://exampl.e");
+        DiscordWebhook wh = new DiscordWebhook("http://127.0.0.1:1");
         wh.setContent("content");
         wh.setDescription("desc");
         wh.setStatus(DiscordWebhook.StatusColor.GREEN);
@@ -22,7 +22,7 @@ class BasicTest {
     @Test
     void pipelineDoesntThrow() {
         assertDoesNotThrow(() -> {
-            DiscordPipelineStep step = new DiscordPipelineStep("http://exampl.e");
+            DiscordPipelineStep step = new DiscordPipelineStep("http://127.0.0.1:1");
             step.setTitle("Test title");
             DiscordPipelineStep.DiscordPipelineStepExecution execution =
                     new DiscordPipelineStep.DiscordPipelineStepExecution();
