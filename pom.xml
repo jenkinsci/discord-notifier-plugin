@@ -25,7 +25,6 @@
     <ban-commons-lang-2.skip>false</ban-commons-lang-2.skip>
     <spotbugs.effort>Max</spotbugs.effort>
     <spotbugs.threshold>Medium</spotbugs.threshold>
-    <hpi.bundledArtifacts>unirest-java</hpi.bundledArtifacts>
     <hpi.strictBundledArtifacts>true</hpi.strictBundledArtifacts>
     <ban-junit4-imports.skip>false</ban-junit4-imports.skip>
   </properties>
@@ -46,14 +45,12 @@
 
   <developers>
     <developer>
-      <id>jammehcow</id>
-      <name>James Upjohn</name>
-      <email>jspartan250@gmail.com</email>
+      <id>markewaite</id>
+      <name>Mark Waite</name>
     </developer>
     <developer>
-      <id>KocproZ</id>
-      <name>Kacper Stasiuk</name>
-      <email>kocproz@protonmail.com</email>
+      <id>h3nr1-d14z</id>
+      <name>h3nr1-d14z</name>
     </developer>
   </developers>
 
@@ -103,12 +100,6 @@
     <dependency>
       <groupId>io.jenkins.plugins</groupId>
       <artifactId>json-api</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>com.konghq</groupId>
-      <artifactId>unirest-java</artifactId>
-      <version>3.14.5</version>
     </dependency>
 
     <!-- for workflow support -->
