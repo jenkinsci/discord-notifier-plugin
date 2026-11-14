@@ -1,16 +1,23 @@
 package nz.co.jammehcow.jenkinsdiscord;
 
 import jenkins.model.Jenkins;
-import kong.unirest.HttpResponse;
-import kong.unirest.JsonNode;
-import kong.unirest.Proxy;
-import kong.unirest.Unirest;
-import kong.unirest.UnirestException;
 import nz.co.jammehcow.jenkinsdiscord.exception.WebhookException;
+import org.apache.http.HttpHost;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Author: jammehcow.
@@ -27,6 +34,9 @@ class DiscordWebhook {
     static final int TITLE_LIMIT = 256;
     static final int DESCRIPTION_LIMIT = 2048;
     static final int FOOTER_LIMIT = 2048;
+
+    private static final int CONNECT_TIMEOUT_MILLIS = 10_000;
+    private static final int SOCKET_TIMEOUT_MILLIS = 30_000;
 
     enum StatusColor {
         /**
@@ -198,32 +208,46 @@ class DiscordWebhook {
 
         this.obj.put("embeds", new JSONArray().put(this.embed));
 
-        try {
-            final Jenkins instance = Jenkins.getInstanceOrNull();
-            if (instance != null && instance.proxy != null && !Unirest.config().isRunning()) {
-                String proxyIP = instance.proxy.name;
-                int proxyPort = instance.proxy.port;
-                if (!proxyIP.equals("")) {
-                    Unirest.config().proxy(new Proxy(proxyIP, proxyPort));
-                }
-            }
-            HttpResponse<JsonNode> response;
-            if (file != null) {
-                response = Unirest.post(this.webhookUrl)
-                        .field("payload_json", obj.toString())
-                        .field("file", file, filename)
-                        .asJson();
-            } else {
-                response = Unirest.post(this.webhookUrl)
-                        .field("payload_json", obj.toString())
-                        .asJson();
-            }
+        RequestConfig.Builder config = RequestConfig.custom()
+                .setConnectTimeout(CONNECT_TIMEOUT_MILLIS)
+                .setSocketTimeout(SOCKET_TIMEOUT_MILLIS);
+        final Jenkins instance = Jenkins.getInstanceOrNull();
+        if (instance != null && instance.proxy != null && !instance.proxy.name.isEmpty()) {
+            config.setProxy(new HttpHost(instance.proxy.name, instance.proxy.port));
+        }
 
-            if (response.getStatus() < 200 || response.getStatus() >= 300) {
-                throw new WebhookException(response.getBody().getObject().toString(2));
+        try (CloseableHttpClient client = HttpClientBuilder.create()
+                .setDefaultRequestConfig(config.build())
+                .build()) {
+            HttpPost post = new HttpPost(this.webhookUrl);
+            MultipartEntityBuilder entity = MultipartEntityBuilder.create()
+                    .addTextBody("payload_json", obj.toString(),
+                            ContentType.create("text/plain", StandardCharsets.UTF_8));
+            if (file != null) {
+                entity.addBinaryBody("file", file, ContentType.APPLICATION_OCTET_STREAM, filename);
             }
-        } catch (UnirestException e) {
-            e.printStackTrace();
+            post.setEntity(entity.build());
+
+            try (CloseableHttpResponse response = client.execute(post)) {
+                int status = response.getStatusLine().getStatusCode();
+                if (status < 200 || status >= 300) {
+                    String body = response.getEntity() != null
+                            ? EntityUtils.toString(response.getEntity())
+                            : "";
+                    throw new WebhookException(formatErrorBody(status, body));
+                }
+                EntityUtils.consume(response.getEntity());
+            }
+        } catch (IOException e) {
+            throw new WebhookException("Failed to send webhook to Discord: " + e.getMessage(), e);
+        }
+    }
+
+    private static String formatErrorBody(int status, String body) {
+        try {
+            return new JSONObject(body).toString(2);
+        } catch (JSONException e) {
+            return "HTTP " + status + ": " + body;
         }
     }
 }
